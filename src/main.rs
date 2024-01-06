@@ -1,3 +1,7 @@
+use mconfig_r::hi;
+
 fn main() {
-    println!("Hello, world!");
+    hi();
+
 }
+
