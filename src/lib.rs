@@ -1,5 +1,15 @@
+
+pub mod mconfig;
+pub mod mcstring;
+
+use crate::mcstring::MCString;
+use crate::mconfig::MConfig;
+
+//placeholder demo function
 pub fn hi() {
-    println!("Hello, world!");
+    let mc: MCString = "Hello MCString".try_into().unwrap();
+
+    println!("{}", mc.as_ref());
 }
 
 
