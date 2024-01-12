@@ -10,6 +10,10 @@ pub fn hi() {
     let mc: MCString = "Hello MCString".try_into().unwrap();
 
     println!("{}", mc.as_ref());
+
+    let mut mcnf: MConfig = MConfig::new();
+    let mcv = mcnf.to_vec();
+    println!("{:?}", mcv);
 }
 
 
