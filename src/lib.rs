@@ -1,19 +1,13 @@
 
 pub mod mconfig;
-pub mod mcstring;
 
-use crate::mcstring::MCString;
 use crate::mconfig::MConfig;
 
 //placeholder demo function
 pub fn hi() {
-    let mc: MCString = "Hello MCString".try_into().unwrap();
-    let mc2: MCString = "mcstring value".try_into().unwrap();
-
-    println!("{}", mc.as_ref());
-
     let mut mcnf: MConfig = MConfig::new();
-    mcnf.try_add(mc, Some(mc2));
+    mcnf.try_add("Hello".to_string(), Some("World".to_string()));
+    mcnf.try_add("Bye".to_string(), None);
     let mcv = mcnf.to_vec();
     println!("{:?}", mcv);
 }

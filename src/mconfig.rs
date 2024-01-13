@@ -2,10 +2,9 @@
 //!
 
 use rand;
-use crate::mcstring::MCString;
 
-type MCHashMap = std::collections::HashMap<MCString, Option<MCString>>;
-type MCResult = std::result::Result<(), ()>;
+type MCHashMap = std::collections::HashMap<String, Option<String>>;
+type MCResult<T> = std::result::Result<T, ()>;
 
 
 pub struct MConfig {
@@ -16,6 +15,9 @@ pub struct MConfig {
 impl MConfig {
     const MAGIC_HEADER_BYTES: [u8; 5] = [0x4d, 0x43, 0x4f, 0x4e, 0x46];
     const MCONFIG_SIZE: usize = 8_192;
+    const MAX_KEY_LEN: usize = 255;
+    const MAX_VALUE_LEN: usize = 255;
+
 
     pub fn new() -> MConfig {
         MConfig {
@@ -26,22 +28,18 @@ impl MConfig {
 
     pub fn to_vec(&self) -> Vec<u8> {
         let mut v: Vec<u8> = Vec::new();
-        let mut byte_count: u32 = 0;
 
         v.append(&mut MConfig::MAGIC_HEADER_BYTES.to_vec());
         v.push(self.version);
-        byte_count += 6;
 
 
         for (entry_k, entry_v) in self.entries.iter() {
-            v.push(entry_k.len());
-            byte_count = byte_count + entry_k.len() as u32;
-            //todo: need to have MCString convert to Vec
+            v.push(entry_k.len() as u8);
+            v.append(&mut entry_k.as_bytes().to_vec());
 
             if let Some(val) = entry_v {
-                v.push(val.len());
-                byte_count = byte_count + val.len() as u32;
-                //todo: MCString conversion to vec
+                v.push(val.len() as u8);
+                v.append(&mut val.as_bytes().to_vec());
             }
             else {
                 v.push(0);
@@ -49,7 +47,7 @@ impl MConfig {
         }
 
         //pad the rest with random
-        for _ in byte_count as usize..MConfig::MCONFIG_SIZE {
+        for _ in v.len() .. MConfig::MCONFIG_SIZE {
             v.push(rand::random::<u8>());
         }
 
@@ -58,12 +56,16 @@ impl MConfig {
 
     }
 
-    pub fn try_add(&mut self, key: MCString, value: Option<MCString>) -> MCResult {
-        self.entries.insert(key, value);
-
-        //todo: check maximum length?
-
-        Ok(())
+    pub fn try_add(&mut self, key: String, value: Option<String>) -> MCResult<Option<String>> {
+        if key.len() > MConfig::MAX_KEY_LEN {
+            return Err(());
+        }
+        if let Some(ref val) = value {
+            if val.len()> MConfig::MAX_VALUE_LEN {
+                return Err(());
+            }
+        }
+        Ok(self.entries.insert(key, value).unwrap_or(None))
 
     }
 }
