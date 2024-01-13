@@ -8,10 +8,12 @@ use crate::mconfig::MConfig;
 //placeholder demo function
 pub fn hi() {
     let mc: MCString = "Hello MCString".try_into().unwrap();
+    let mc2: MCString = "mcstring value".try_into().unwrap();
 
     println!("{}", mc.as_ref());
 
     let mut mcnf: MConfig = MConfig::new();
+    mcnf.try_add(mc, Some(mc2));
     let mcv = mcnf.to_vec();
     println!("{:?}", mcv);
 }

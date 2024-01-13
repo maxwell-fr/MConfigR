@@ -1,11 +1,15 @@
 //! A constrained string type
 //! UTF-8 and < 256 bytes
-
+#[derive(Hash, Eq, PartialEq)]
 pub struct MCString {
     value: String,
 }
 
-impl MCString {}
+impl MCString {
+    pub fn len(&self) -> u8 {
+        self.value.len() as u8
+    }
+}
 
 impl TryFrom<&str> for MCString {
     type Error = ();
