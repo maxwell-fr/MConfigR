@@ -5,11 +5,17 @@ use crate::mconfig::MConfig;
 
 //placeholder demo function
 pub fn hi() {
-    let mut mcnf: MConfig = MConfig::new();
-    mcnf.try_add("Hello".to_string(), Some("World".to_string()));
-    mcnf.try_add("Bye".to_string(), None);
+    let hello = "Hello".to_string();
+    let mut mcnf: MConfig = MConfig::new("TESTSECRET");
+    mcnf.try_add("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
+    mcnf.try_add("Bye".to_string(), None).expect("Bye failed");
     let mcv = mcnf.to_vec();
-    println!("{:?}", mcv);
+    println!("{:?}", mcv.len());
+    let g = mcnf.get(&hello).unwrap();
+    let h = g.as_ref();
+    let i = h.unwrap();
+    println!("{:?}", i);
+    println!("{:?}", mcnf.get("Hello").unwrap());
 }
 
 
