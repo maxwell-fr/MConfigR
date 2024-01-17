@@ -131,3 +131,26 @@ impl TryFrom<Vec<u8>> for MConfig {
         todo!()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn key_retrievable_with_secret(){
+        let mut mc = MConfig::new("secret secret, I've got a secret");
+
+        let _ = mc.try_add("Test Key".to_string(), Some("Test Value".to_string()));
+
+        assert_eq!(mc.get("Test Key"), Some(Some("Test Value".to_string())).as_ref());
+    }
+
+    #[test]
+    fn key_retrievable_without_secret(){
+        let mut mc = MConfig::without_secret();
+
+        let _ = mc.try_add("Test Key".to_string(), Some("Test Value".to_string()));
+
+        assert_eq!(mc.get("Test Key"), Some(Some("Test Value".to_string())).as_ref());
+    }
+}
