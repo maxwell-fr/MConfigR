@@ -6,7 +6,8 @@ use crate::mconfig::MConfig;
 //placeholder demo function
 pub fn hi() {
     let hello = "Hello".to_string();
-    let mut mcnf: MConfig = MConfig::new("TESTSECRET");
+    //let mut mcnf: MConfig = MConfig::new("TESTSECRET");
+    let mut mcnf: MConfig = MConfig::without_secret();
     mcnf.try_add("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
     mcnf.try_add("Bye".to_string(), None).expect("Bye failed");
     let mcv = mcnf.to_vec();
@@ -14,8 +15,10 @@ pub fn hi() {
     let g = mcnf.get(&hello).unwrap();
     let h = g.as_ref();
     let i = h.unwrap();
+    let mcnf1 = MConfig::try_from(mcv).unwrap();
     println!("{:?}", i);
     println!("{:?}", mcnf.get("Hello").unwrap());
+    println!("{:?}", mcnf1.get("Hello").unwrap());
 }
 
 

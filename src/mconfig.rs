@@ -15,6 +15,7 @@ pub struct MConfig {
 impl MConfig {
     const MAGIC_HEADER_BYTES: [u8; 5] = [0x4d, 0x43, 0x4f, 0x4e, 0x46];
     const HEADER_SIZE: usize = MConfig::MAGIC_HEADER_BYTES.len() + 1;
+    const VERSION_INDEX: usize = MConfig::MAGIC_HEADER_BYTES.len();
     const MCONFIG_SIZE: usize = 8_192;
     const MAX_KEY_LEN: usize = u8::MAX as usize;
     const MAX_VALUE_LEN: usize = u8::MAX as usize;
@@ -124,11 +125,90 @@ impl MConfig {
     }
 }
 
+#[derive(Debug)]
+pub enum MCError {
+    TooShort,
+    TooBig,
+    BadHeader,
+    UnknownVersion,
+    TruncatedKey,
+    TruncatedValue,
+    MissingKey,
+    InvalidUTF8
+}
 impl TryFrom<Vec<u8>> for MConfig {
-    type Error = ();
+    type Error = MCError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        todo!()
+        if value.len() < MConfig::HEADER_SIZE {
+            return Err(MCError::TooShort); //minimum length
+        }
+        if value.len() > MConfig::MCONFIG_SIZE {
+            return Err(MCError::TooBig); //maximum length
+        }
+
+        //check header magic
+        if value[0..MConfig::MAGIC_HEADER_BYTES.len()] != MConfig::MAGIC_HEADER_BYTES {
+            return Err(MCError::BadHeader);
+        }
+
+        //check version
+        if value[MConfig::VERSION_INDEX] != 0u8 {
+            return Err(MCError::UnknownVersion);
+        }
+
+        let mut entries = MConfig::without_secret();
+        let mut value_iter = value[MConfig::HEADER_SIZE..].iter().copied();
+
+        while let Some(b) = value_iter.next() {
+            //key length
+            let key_len = b as usize;
+            //key length zero means end of data/start of padding
+            if key_len == 0 {
+                break;
+            }
+
+            let mut key_bytes: Vec<u8> = Vec::with_capacity(key_len);
+            for _ in 0..key_len {
+                match value_iter.next() {
+                    Some(k) => key_bytes.push(k),
+                    None => return Err(MCError::TruncatedKey) // truncated key
+                }
+            }
+
+            let key: String = match String::from_utf8(key_bytes) {
+                Ok(k) => k,
+                Err(_) => return Err(MCError::InvalidUTF8) //invalid UTF-8
+            };
+
+            let val_len = match value_iter.next() {
+                Some(v) => v as usize,
+                None => return Err(MCError::MissingKey) // key with no value marker
+            };
+
+            if val_len > 0 {
+                let mut val_bytes: Vec<u8> = Vec::with_capacity(val_len);
+                for _ in 0..val_len {
+                    match value_iter.next() {
+                        Some(v) => val_bytes.push(v),
+                        None => return Err(MCError::TruncatedValue) //truncated value
+                    }
+                }
+
+                let val = match String::from_utf8(val_bytes) {
+                    Ok(v) => v,
+                    Err(_) => return Err(MCError::InvalidUTF8)
+                };
+
+                entries.try_add(key, Some(val));
+            }
+            else {
+                entries.try_add(key, None); //valueless keys are allowed
+            }
+
+        }
+
+        Ok(entries)
     }
 }
 
