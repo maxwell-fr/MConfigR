@@ -3,8 +3,22 @@
 
 use rand;
 
+#[derive(Debug)]
+pub enum MCError {
+    TooShort,
+    TooBig,
+    BadHeader,
+    UnknownVersion,
+    TruncatedKey,
+    TruncatedValue,
+    MissingKey,
+    InvalidUTF8,
+    ValueTooBig,
+    KeyTooBig,
+}
+
 type MCHashMap = std::collections::HashMap<String, Option<String>>;
-type MCResult<T> = std::result::Result<T, ()>;
+type MCResult<T> = std::result::Result<T, MCError>;
 
 pub struct MConfig {
     version: u8,
@@ -19,22 +33,6 @@ impl MConfig {
     const MCONFIG_SIZE: usize = 8_192;
     const MAX_KEY_LEN: usize = u8::MAX as usize;
     const MAX_VALUE_LEN: usize = u8::MAX as usize;
-
-    pub fn new(secret: &str) -> MConfig {
-        MConfig {
-            version: 0,
-            entries: MCHashMap::new(),
-            secret: Some(secret.to_string()),
-        }
-    }
-
-    pub fn without_secret() -> MConfig {
-        MConfig {
-            version: 0,
-            entries: MCHashMap::new(),
-            secret: None,
-        }
-    }
 
     pub fn to_vec(&self) -> Vec<u8> {
         self.obfuscate()
@@ -73,18 +71,18 @@ impl MConfig {
 
     pub fn try_insert(&mut self, key: String, value: Option<String>) -> MCResult<Option<String>> {
         if key.len() > MConfig::MAX_KEY_LEN {
-            return Err(());
+            return Err(MCError::KeyTooBig);
         }
         if let Some(ref val) = value {
             if val.len() > MConfig::MAX_VALUE_LEN {
-                return Err(());
+                return Err(MCError::ValueTooBig);
             }
         }
         Ok(self.entries.insert(key, value).unwrap_or(None))
     }
 
     pub fn try_get(&self, key: &str) -> MCResult<&Option<String>> {
-        self.entries.get(key).ok_or(())
+        self.entries.get(key).ok_or(MCError::MissingKey)
     }
 
     pub fn get(&self, key: &str) -> Option<&Option<String>> {
@@ -123,23 +121,9 @@ impl MConfig {
         }
         buf
     }
-}
 
-#[derive(Debug)]
-pub enum MCError {
-    TooShort,
-    TooBig,
-    BadHeader,
-    UnknownVersion,
-    TruncatedKey,
-    TruncatedValue,
-    MissingKey,
-    InvalidUTF8
-}
-impl TryFrom<Vec<u8>> for MConfig {
-    type Error = MCError;
 
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+    fn try_parse(value: &Vec<u8>, secret: &Option<String>) -> MCResult<MCHashMap> {
         if value.len() < MConfig::HEADER_SIZE {
             return Err(MCError::TooShort); //minimum length
         }
@@ -157,7 +141,9 @@ impl TryFrom<Vec<u8>> for MConfig {
             return Err(MCError::UnknownVersion);
         }
 
-        let mut entries = MConfig::without_secret();
+        //TODO: add deobfuscation
+
+        let mut entries = MCHashMap::new();
         let mut value_iter = value[MConfig::HEADER_SIZE..].iter().copied();
 
         while let Some(b) = value_iter.next() {
@@ -200,15 +186,61 @@ impl TryFrom<Vec<u8>> for MConfig {
                     Err(_) => return Err(MCError::InvalidUTF8)
                 };
 
-                entries.try_insert(key, Some(val));
+                entries.insert(key, Some(val));
+            } else {
+                entries.insert(key, None); //valueless keys are allowed
             }
-            else {
-                entries.try_insert(key, None); //valueless keys are allowed
-            }
-
         }
 
         Ok(entries)
+    }
+}
+
+pub struct MConfigBuilder {
+    secret: Option<String>,
+    raw_bytes: Option<Vec<u8>>
+}
+
+impl MConfigBuilder {
+    pub fn new() -> MConfigBuilder {
+        MConfigBuilder {
+            secret: None,
+            raw_bytes: None
+        }
+    }
+
+    pub fn secret(mut self, secret: String) -> MConfigBuilder {
+        self.secret = Some(secret);
+        self
+    }
+
+    pub fn load(mut self, raw_bytes: Vec<u8>) -> MConfigBuilder {
+        self.raw_bytes = Some(raw_bytes);
+        self
+    }
+
+    pub fn try_build(&self) -> MCResult<MConfig> {
+        let maybe_entries = match self.raw_bytes {
+            Some(ref raw) => {
+                MConfig::try_parse(raw, &self.secret)
+            }
+            None => {
+                Ok(MCHashMap::new())
+            }
+        };
+
+        match maybe_entries {
+            Ok(entries) => {
+                Ok(MConfig {
+                    secret: self.secret.clone(),
+                    entries: entries,
+                    version: 0
+                })
+            }
+            Err(e) => {
+                Err(e)
+            }
+        }
     }
 }
 
