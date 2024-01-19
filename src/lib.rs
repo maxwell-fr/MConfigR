@@ -8,8 +8,8 @@ pub fn hi() {
     let hello = "Hello".to_string();
     //let mut mcnf: MConfig = MConfig::new("TESTSECRET");
     let mut mcnf: MConfig = MConfig::without_secret();
-    mcnf.try_add("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
-    mcnf.try_add("Bye".to_string(), None).expect("Bye failed");
+    mcnf.try_insert("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
+    mcnf.try_insert("Bye".to_string(), None).expect("Bye failed");
     let mcv = mcnf.to_vec();
     println!("{:?}", mcv.len());
     let g = mcnf.get(&hello).unwrap();

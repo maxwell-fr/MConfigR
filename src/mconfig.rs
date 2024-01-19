@@ -71,7 +71,7 @@ impl MConfig {
         v
     }
 
-    pub fn try_add(&mut self, key: String, value: Option<String>) -> MCResult<Option<String>> {
+    pub fn try_insert(&mut self, key: String, value: Option<String>) -> MCResult<Option<String>> {
         if key.len() > MConfig::MAX_KEY_LEN {
             return Err(());
         }
@@ -200,10 +200,10 @@ impl TryFrom<Vec<u8>> for MConfig {
                     Err(_) => return Err(MCError::InvalidUTF8)
                 };
 
-                entries.try_add(key, Some(val));
+                entries.try_insert(key, Some(val));
             }
             else {
-                entries.try_add(key, None); //valueless keys are allowed
+                entries.try_insert(key, None); //valueless keys are allowed
             }
 
         }
@@ -220,7 +220,7 @@ mod tests {
     fn key_retrievable_with_secret(){
         let mut mc = MConfig::new("secret secret, I've got a secret");
 
-        let _ = mc.try_add("Test Key".to_string(), Some("Test Value".to_string()));
+        let _ = mc.try_insert("Test Key".to_string(), Some("Test Value".to_string()));
 
         assert_eq!(mc.get("Test Key"), Some(Some("Test Value".to_string())).as_ref());
     }
@@ -229,7 +229,7 @@ mod tests {
     fn key_retrievable_without_secret(){
         let mut mc = MConfig::without_secret();
 
-        let _ = mc.try_add("Test Key".to_string(), Some("Test Value".to_string()));
+        let _ = mc.try_insert("Test Key".to_string(), Some("Test Value".to_string()));
 
         assert_eq!(mc.get("Test Key"), Some(Some("Test Value".to_string())).as_ref());
     }
