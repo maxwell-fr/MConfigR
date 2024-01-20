@@ -35,7 +35,7 @@ impl MConfig {
     const MAX_VALUE_LEN: usize = u8::MAX as usize;
 
     pub fn to_vec(&self) -> Vec<u8> {
-        self.obfuscate()
+        MConfig::obfuscate(self.to_raw_vec(), &self.secret)
     }
 
     fn to_raw_vec(&self) -> Vec<u8> {
@@ -97,17 +97,17 @@ impl MConfig {
         self.entries.remove(key)
     }
 
-    fn obfuscate(&self) -> Vec<u8> {
-        match self.secret {
-            Some(ref secret) => MConfig::xor_buffer(self.to_raw_vec(), secret.as_bytes().to_vec()),
-            None => self.to_raw_vec(),
+    fn obfuscate(buffer: Vec<u8>, secret: &Option<String>) -> Vec<u8> {
+        match secret {
+            Some(ref secret) => MConfig::xor_buffer(buffer.clone(), secret.as_bytes().to_vec()),
+            None => buffer,
         }
     }
 
-    fn deobfuscate(&self) -> Vec<u8> {
-        match self.secret {
-            Some(ref secret) => MConfig::xor_buffer(self.to_raw_vec(), secret.as_bytes().to_vec()),
-            None => self.to_raw_vec(),
+    fn deobfuscate(buffer: Vec<u8>, secret: &Option<String>) -> Vec<u8> {
+        match secret {
+            Some(ref secret) => MConfig::xor_buffer(buffer.clone(), secret.as_bytes().to_vec()),
+            None => buffer,
         }
     }
 
@@ -123,28 +123,28 @@ impl MConfig {
     }
 
 
-    fn try_parse(value: &Vec<u8>, secret: &Option<String>) -> MCResult<MCHashMap> {
-        if value.len() < MConfig::HEADER_SIZE {
+    fn try_parse(buffer: Vec<u8>, secret: &Option<String>) -> MCResult<MCHashMap> {
+        if buffer.len() < MConfig::HEADER_SIZE {
             return Err(MCError::TooShort); //minimum length
         }
-        if value.len() > MConfig::MCONFIG_SIZE {
+        if buffer.len() > MConfig::MCONFIG_SIZE {
             return Err(MCError::TooBig); //maximum length
         }
 
         //check header magic
-        if value[0..MConfig::MAGIC_HEADER_BYTES.len()] != MConfig::MAGIC_HEADER_BYTES {
+        if buffer[0..MConfig::MAGIC_HEADER_BYTES.len()] != MConfig::MAGIC_HEADER_BYTES {
             return Err(MCError::BadHeader);
         }
 
         //check version
-        if value[MConfig::VERSION_INDEX] != 0u8 {
+        if buffer[MConfig::VERSION_INDEX] != 0u8 {
             return Err(MCError::UnknownVersion);
         }
 
-        //TODO: add deobfuscation
+        let buffer = MConfig::deobfuscate(buffer, &secret);
 
         let mut entries = MCHashMap::new();
-        let mut value_iter = value[MConfig::HEADER_SIZE..].iter().copied();
+        let mut value_iter = buffer[MConfig::HEADER_SIZE..].iter().copied();
 
         while let Some(b) = value_iter.next() {
             //key length
@@ -196,12 +196,14 @@ impl MConfig {
     }
 }
 
+/// Builder for the MConfig struct
 pub struct MConfigBuilder {
     secret: Option<String>,
     raw_bytes: Option<Vec<u8>>
 }
 
 impl MConfigBuilder {
+    /// Returns an empty builder
     pub fn new() -> MConfigBuilder {
         MConfigBuilder {
             secret: None,
@@ -209,19 +211,24 @@ impl MConfigBuilder {
         }
     }
 
-    pub fn secret(mut self, secret: String) -> MConfigBuilder {
-        self.secret = Some(secret);
+    /// Sets the optional secret for this builder
+    pub fn secret(mut self, secret: &str) -> MConfigBuilder {
+        self.secret = Some(secret.to_string());
         self
     }
 
+    /// Loads raw bytes which may or may not be obfuscated
     pub fn load(mut self, raw_bytes: Vec<u8>) -> MConfigBuilder {
         self.raw_bytes = Some(raw_bytes);
         self
     }
 
-    pub fn try_build(&self) -> MCResult<MConfig> {
+    /// Attempts to construct the MConfig object.
+    /// This can fail if invalid raw data is loaded.
+    /// Note that, while failure is likely if an invalid key is provided, it is not guaranteed.
+    pub fn try_build(self) -> MCResult<MConfig> {
         let maybe_entries = match self.raw_bytes {
-            Some(ref raw) => {
+            Some(raw) => {
                 MConfig::try_parse(raw, &self.secret)
             }
             None => {
@@ -250,7 +257,7 @@ mod tests {
 
     #[test]
     fn key_retrievable_with_secret(){
-        let mut mc = MConfig::new("secret secret, I've got a secret");
+        let mut mc = MConfigBuilder::new().secret("secret secret, I've got a secret").try_build().unwrap();
 
         let _ = mc.try_insert("Test Key".to_string(), Some("Test Value".to_string()));
 
@@ -259,10 +266,37 @@ mod tests {
 
     #[test]
     fn key_retrievable_without_secret(){
-        let mut mc = MConfig::without_secret();
+        let mut mc = MConfigBuilder::new().try_build().unwrap();
 
         let _ = mc.try_insert("Test Key".to_string(), Some("Test Value".to_string()));
 
         assert_eq!(mc.get("Test Key"), Some(Some("Test Value".to_string())).as_ref());
+    }
+
+    #[test]
+    fn to_and_from_vec() {
+        let mut before_vec = MConfigBuilder::new().secret("I like TACOS").try_build().unwrap();
+        before_vec.try_insert("Hello".to_string(), Some("World".to_string())).unwrap();
+
+        let mcv = before_vec.to_vec();
+
+        let after_vec = MConfigBuilder::new().load(mcv).secret("I like TACOS").try_build().unwrap();
+
+        assert_eq!(before_vec.get("Hello"), Some(Some("World".to_string())).as_ref());
+        assert_eq!(after_vec.get("Hello"), Some(Some("World".to_string())).as_ref());
+    }
+
+    #[test]
+    #[should_panic]
+    fn bad_key_fails() {
+        let mut before_vec = MConfigBuilder::new().secret("I like TACOS").try_build().unwrap();
+        before_vec.try_insert("Hello".to_string(), Some("World".to_string())).unwrap();
+
+        let mcv = before_vec.to_vec();
+
+        let after_vec = MConfigBuilder::new().load(mcv).secret("I hate TACOS").try_build().unwrap();
+
+        assert_eq!(before_vec.get("Hello"), Some(Some("World".to_string())).as_ref());
+        assert_eq!(after_vec.get("Hello"), Some(Some("World".to_string())).as_ref());
     }
 }

@@ -1,13 +1,13 @@
 
 pub mod mconfig;
 
-use crate::mconfig::{MConfig, MConfigBuilder};
+use crate::mconfig::MConfigBuilder;
 
 //placeholder demo function
 pub fn hi() {
     let hello = "Hello".to_string();
     //let mut mcnf: MConfig = MConfig::new("TESTSECRET");
-    let mut mcnf = MConfigBuilder::new().try_build().unwrap();
+    let mut mcnf = MConfigBuilder::new().secret("TACOS").try_build().unwrap();
     mcnf.try_insert("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
     mcnf.try_insert("Bye".to_string(), None).expect("Bye failed");
 
@@ -18,7 +18,7 @@ pub fn hi() {
     let h = g.as_ref();
     let i = h.unwrap();
 
-    let mcnf1 = MConfigBuilder::new().load(mcv).try_build().unwrap();
+    let mcnf1 = MConfigBuilder::new().load(mcv).secret("TACOS").try_build().unwrap();
 
     println!("{:?}", i);
     println!("{:?}", mcnf.get("Hello").unwrap());
