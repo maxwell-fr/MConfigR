@@ -18,11 +18,12 @@ pub fn hi() {
     let h = g.as_ref();
     let i = h.unwrap();
 
-    let mcnf1 = MConfigBuilder::new().load(mcv).secret("TACOS").try_build().unwrap();
+    let mcnf1 = MConfigBuilder::new().load(mcv).secret("TACOS").try_build();
+   // .unwrap();
 
     println!("{:?}", i);
     println!("{:?}", mcnf.get("Hello").unwrap());
-    println!("{:?}", mcnf1.get("Hello").unwrap());
+    println!("{:?}", mcnf1.unwrap().get("Hello").unwrap());
 }
 
 
