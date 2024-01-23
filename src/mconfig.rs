@@ -172,5 +172,31 @@ impl MConfig {
         buf
     }
 
+    /// Helper function to get an Iterator
+    pub fn iter(&self) -> MConfigIter {
+        MConfigIter::new(self)
+    }
 
+}
+
+pub struct MConfigIter<'a> {
+    _mconfig: &'a MConfig,
+    mc_iter: std::collections::hash_map::Iter<'a, String, Option<String>>,
+}
+
+impl MConfigIter<'_> {
+    fn new(mconfig: &MConfig) -> MConfigIter {
+        MConfigIter {
+            _mconfig: mconfig,
+            mc_iter: mconfig.entries.iter()
+        }
+    }
+}
+
+impl<'a> Iterator for MConfigIter<'a> {
+    type Item = (&'a String, &'a Option<String>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.mc_iter.next()
+    }
 }

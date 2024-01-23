@@ -23,6 +23,10 @@ pub fn hi() {
     println!("{:?}", i);
     println!("{:?}", mcnf.get("Hello").unwrap());
     println!("{:?}", mcnf1.unwrap().get("Hello").unwrap());
+
+    for e in mcnf.iter() {
+        println!("{:?}", e);
+    }
 }
 
 
