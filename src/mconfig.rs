@@ -3,6 +3,7 @@
 mod mconfig_builder;
 
 use rand;
+use std::collections::hash_map::Iter as HashMapIter;
 use crate::mconfig::mconfig_builder::MConfigBuilder;
 
 #[derive(Debug, PartialEq)]
@@ -179,15 +180,14 @@ impl MConfig {
 
 }
 
+/// Iterator support
 pub struct MConfigIter<'a> {
-    _mconfig: &'a MConfig,
-    mc_iter: std::collections::hash_map::Iter<'a, String, Option<String>>,
+    mc_iter: HashMapIter<'a, String, Option<String>>,
 }
 
 impl MConfigIter<'_> {
     fn new(mconfig: &MConfig) -> MConfigIter {
         MConfigIter {
-            _mconfig: mconfig,
             mc_iter: mconfig.entries.iter()
         }
     }
