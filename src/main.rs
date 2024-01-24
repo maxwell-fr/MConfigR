@@ -1,7 +1,7 @@
-use mconfig_r::hi;
+use mconfig_r::demo;
 
 fn main() {
-    hi();
+    demo();
 
 }
 

@@ -2,28 +2,26 @@ use crate::mconfig::MConfig;
 
 pub mod mconfig;
 
-//placeholder demo function
-pub fn hi() {
-    let hello = "Hello".to_string();
-    //let mut mcnf: MConfig = MConfig::new("TESTSECRET");
+// demo function
+pub fn demo() {
     let mut mcnf = MConfig::builder().secret("TACOS").try_build().unwrap();
     mcnf.try_insert("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
     mcnf.try_insert("Bye".to_string(), None).expect("Bye failed");
 
+    // Convert it to a vec
     let mcv = mcnf.to_vec();
     println!("{:?}", mcv.len());
 
-    let g = mcnf.get(&hello).unwrap();
-    let h = g.as_ref();
-    let i = h.unwrap();
-
+    // Make a new one using the vec
     let mcnf1 = MConfig::builder().load(mcv).secret("TACOS").try_build();
-   // .unwrap();
 
-    println!("{:?}", i);
+    // Retrieve a key and print
     println!("{:?}", mcnf.get("Hello").unwrap());
+
+    // Retrieve a key from the duplicated one
     println!("{:?}", mcnf1.unwrap().get("Hello").unwrap());
 
+    // Demonstrate the iterator function
     for e in mcnf.iter() {
         println!("{:?}", e);
     }
