@@ -19,7 +19,7 @@ pub fn demo() {
     println!("{:?}", mcnf.get("Hello").unwrap());
 
     // Retrieve a key from the duplicated one
-    println!("{:?}", mcnf1.unwrap().get("Hello").unwrap());
+    println!("{:?}", mcnf1.unwrap()["Hello"].as_ref().unwrap());
 
     // Demonstrate the iterator function
     for e in mcnf.iter() {
