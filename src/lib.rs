@@ -1,6 +1,6 @@
-use crate::mconfig::MConfig;
+use crate::mconfigurator::MConfig;
 
-pub mod mconfig;
+pub mod mconfigurator;
 
 // demo function
 pub fn demo() {

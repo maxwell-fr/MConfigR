@@ -5,7 +5,7 @@
 //!
 //! ```
 //!
-//! use mconfig_r::mconfig::MConfig;
+//! use mconfig::mconfigurator::MConfig;
 //! pub fn demo() {
 //!     let mut mcnf = MConfig::builder().secret("TACOS").try_build().unwrap();
 //!     mcnf.try_insert("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
@@ -22,7 +22,7 @@
 //!     println!("{:?}", mcnf.get("Hello").unwrap());
 //!
 //!     // Retrieve a key from the duplicated one
-//!     println!("{:?}", mcnf1.unwrap()["Hello"].unwrap());
+//!     println!("{:?}", mcnf1.unwrap()["Hello"].as_ref().unwrap());
 //!
 //!     // Demonstrate the iterator function
 //!     for e in mcnf.iter() {
@@ -33,7 +33,7 @@
 //!
 mod mconfig_builder;
 
-use crate::mconfig::mconfig_builder::MConfigBuilder;
+use crate::mconfigurator::mconfig_builder::MConfigBuilder;
 use rand;
 use std::collections::hash_map::Iter as HashMapIter;
 use std::ops::Index;

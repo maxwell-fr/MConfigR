@@ -1,4 +1,4 @@
-use crate::mconfig::{MCError, MCHashMap, MConfig, MCResult};
+use crate::mconfigurator::{MCError, MCHashMap, MConfig, MCResult};
 
 /// Builder for the MConfig struct
 pub struct MConfigBuilder {
@@ -130,7 +130,7 @@ impl Default for MConfigBuilder {
 
 #[cfg(test)]
 mod tests {
-    use crate::mconfig::*;
+    use crate::mconfigurator::*;
 
     #[test]
     fn key_retrievable_with_secret() {
