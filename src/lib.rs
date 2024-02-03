@@ -2,9 +2,11 @@ use crate::mconfigurator::MConfig;
 
 pub mod mconfigurator;
 
-// demo function
-pub fn demo() {
-    let mut mcnf = MConfig::builder().secret("TACOS").try_build().unwrap();
+/// demo function
+/// returns a tuple with a secrete and vec containing and mconfig data block
+pub fn demo() -> (String, Vec<u8>){
+    let secret = "TACOS".to_string();
+    let mut mcnf = MConfig::builder().secret(&secret).try_build().unwrap();
     mcnf.try_insert("Hello".to_string(), Some("World".to_string())).expect("Hello failed");
     mcnf.try_insert("Bye".to_string(), None).expect("Bye failed");
 
@@ -25,6 +27,8 @@ pub fn demo() {
     for e in mcnf.iter() {
         println!("{:?}", e);
     }
+
+    (secret, mcnf.to_vec())
 }
 
 
