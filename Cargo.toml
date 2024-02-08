@@ -2,6 +2,7 @@
 name = "mconfig"
 version = "0.1.0"
 edition = "2021"
+description = "A simple key-value library and viewer utility."
 
 [[bin]]
 name = "mconfig_demo"
@@ -11,3 +12,4 @@ path = "src/main.rs"
 
 [dependencies]
 rand = "0.8.4"
+clap = { version = "4.4.18", features = ["cargo"] }
