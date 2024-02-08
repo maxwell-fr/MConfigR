@@ -76,13 +76,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(key) = arg_matches.get_one::<String>("key") {
-        println!("Key: {key}");
-        todo!("Key handling not implemented.")
+        if let Some(value) = arg_matches.get_one::<String>("value") {
+            println!("Value: {value}");
+            todo!("Setting a value is not yet implemented.")
+        }
+        else {
+            if let Some(value) = mcnf.get(key) {
+                let value = value.clone().unwrap_or("<empty>".to_string());
+                println!("{key}: {value}");
+            }
+            else {
+                println!("{key} not found.");
+            }
+        }
+
     }
-    if let Some(value) = arg_matches.get_one::<String>("value") {
-        println!("Value: {value}");
-        todo!("Value handling not implemented")
-    }
+
 
     Ok(())
 }
