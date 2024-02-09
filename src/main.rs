@@ -1,6 +1,6 @@
 use std::error::Error;
 use clap::{Arg, arg, ArgAction, ArgMatches};
-use mconfig::mconfigurator::{MConfig, MCResult};
+use mconfig::MConfig;
 use std::fs::{File, read};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -36,6 +36,24 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .requires("key")
                 .required(false)
                 .help("The value to set (optional)."),
+        )
+        .arg(
+            Arg::new("empty")
+                .long("empty")
+                .short('e')
+                .requires("key")
+                .conflicts_with("value")
+                .action(ArgAction::SetTrue)
+                .help("Specify the key should be created with no value.")
+        )
+        .arg(
+            Arg::new("remove")
+                .long("remove")
+                .short('r')
+                .requires("key")
+                .conflicts_with("value")
+                .action(ArgAction::SetTrue)
+                .help("Delete the specified key and value, if any.")
         )
         .get_matches();
 
@@ -76,6 +94,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     if let Some(key) = arg_matches.get_one::<String>("key") {
+        if arg_matches.get_flag("remove") {
+            todo!("Deletion is not yet implemented.")
+        }
+        else if arg_matches.get_flag("empty") {
+            todo!("Setting an empty key is not  yet implemented.")
+        }
         if let Some(value) = arg_matches.get_one::<String>("value") {
             println!("Value: {value}");
             todo!("Setting a value is not yet implemented.")

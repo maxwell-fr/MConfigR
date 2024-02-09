@@ -1,4 +1,4 @@
-use crate::mconfigurator::MConfig;
+pub use crate::mconfigurator::MConfig;
 
 pub mod mconfigurator;
 
