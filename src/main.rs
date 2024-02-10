@@ -1,7 +1,7 @@
-use std::error::Error;
-use clap::{Arg, arg, ArgAction, ArgMatches};
+use clap::{arg, Arg, ArgAction, ArgMatches};
 use mconfig::MConfig;
-use std::fs::{File, read};
+use std::error::Error;
+use std::fs::{read, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .requires("key")
                 .conflicts_with("value")
                 .action(ArgAction::SetTrue)
-                .help("Specify the key should be created with no value.")
+                .help("Specify the key should be created with no value."),
         )
         .arg(
             Arg::new("remove")
@@ -53,11 +53,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .requires("key")
                 .conflicts_with("value")
                 .action(ArgAction::SetTrue)
-                .help("Delete the specified key and value, if any.")
+                .help("Delete the specified key and value, if any."),
         )
         .get_matches();
 
-    let file = arg_matches.get_one::<PathBuf>("file").expect("Required parameter 'file' is missing.");
+    let file = arg_matches
+        .get_one::<PathBuf>("file")
+        .expect("Required parameter 'file' is missing.");
     let data = match read(file) {
         Ok(d) => {
             println!("Loaded {} bytes from {}", d.len(), file.display());
@@ -65,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         Err(e) => {
             eprintln!("Error loading {}: {}", file.display(), e);
-            return Err(e.into())
+            return Err(e.into());
         }
     };
 
@@ -75,20 +77,24 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut secret = String::new();
     std::io::stdin().read_line(&mut secret)?;
 
-    let mcnf = match MConfig::builder().load(data).secret(&secret.trim()).try_build() {
+    let mcnf = match MConfig::builder()
+        .load(data)
+        .secret(&secret.trim())
+        .try_build()
+    {
         Ok(m) => {
             println!("Loaded MConfigurator data with {} entries.", m.len());
             m
         }
         Err(e) => {
             eprintln!("Failed to load MConfigurator data: {}", e);
-            return Err(e.into())
+            return Err(e.into());
         }
     };
 
     // listing objects, nothing else
-    if let Some(true) = arg_matches.get_flag("list") {
-        for (k,v) in mcnf.iter() {
+    if arg_matches.get_flag("list") {
+        for (k, v) in mcnf.iter() {
             let v = v.clone().unwrap_or("<empty>".to_string());
             println!("{k}: {v}");
         }
@@ -98,26 +104,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     if let Some(key) = arg_matches.get_one::<String>("key") {
         if arg_matches.get_flag("remove") {
             todo!("Deletion is not yet implemented.")
-        }
-        else if arg_matches.get_flag("empty") {
+        } else if arg_matches.get_flag("empty") {
             todo!("Setting an empty key is not  yet implemented.")
         }
         if let Some(value) = arg_matches.get_one::<String>("value") {
             println!("Value: {value}");
             todo!("Setting a value is not yet implemented.")
-        }
-        else {
+        } else {
             if let Some(value) = mcnf.get(key) {
                 let value = value.clone().unwrap_or("<empty>".to_string());
                 println!("{key}: {value}");
-            }
-            else {
+            } else {
                 println!("{key} not found.");
             }
         }
     }
 
-
     Ok(())
 }
-
