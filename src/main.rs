@@ -69,6 +69,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
+    // Retrieve secret from stdin. Todo: make this hide the typed text visually
     print!("Enter secret: ");
     std::io::stdout().flush()?;
     let mut secret = String::new();
@@ -85,14 +86,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     };
 
-
-    if let Some(true) = arg_matches.get_one::<bool>("list") {
+    // listing objects, nothing else
+    if let Some(true) = arg_matches.get_flag("list") {
         for (k,v) in mcnf.iter() {
             let v = v.clone().unwrap_or("<empty>".to_string());
             println!("{k}: {v}");
         }
     }
 
+    // The key argument is mutex with list
     if let Some(key) = arg_matches.get_one::<String>("key") {
         if arg_matches.get_flag("remove") {
             todo!("Deletion is not yet implemented.")
@@ -113,7 +115,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                 println!("{key} not found.");
             }
         }
-
     }
 
 
