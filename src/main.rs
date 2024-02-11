@@ -1,7 +1,7 @@
 use clap::{arg, Arg, ArgAction, ArgMatches};
 use mconfig::MConfig;
 use std::error::Error;
-use std::fs::{read, File};
+use std::fs::{write, read, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut secret = String::new();
     std::io::stdin().read_line(&mut secret)?;
 
-    let mcnf = match MConfig::builder()
+    let mut mcnf = match MConfig::builder()
         .load(data)
         .secret(&secret.trim())
         .try_build()
@@ -103,11 +103,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     // The key argument is mutex with list
     if let Some(key) = arg_matches.get_one::<String>("key") {
         if arg_matches.get_flag("remove") {
-            todo!("Deletion is not yet implemented.")
+            let old = mcnf.remove(key);
+            if let Some(old) = old {
+                println!("Removed {key} with value {}", old.unwrap_or("<empty>".to_string()));
+                write(file, mcnf.to_vec())?;
+                println!("Updated {}", file.display());
+            }
+
         } else if arg_matches.get_flag("empty") {
             todo!("Setting an empty key is not  yet implemented.")
         }
-        if let Some(value) = arg_matches.get_one::<String>("value") {
+        else if let Some(value) = arg_matches.get_one::<String>("value") {
             println!("Value: {value}");
             todo!("Setting a value is not yet implemented.")
         } else {
