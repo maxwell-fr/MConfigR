@@ -111,11 +111,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
         } else if arg_matches.get_flag("empty") {
-            todo!("Setting an empty key is not  yet implemented.")
+            let old = mcnf.try_insert(key.clone(), None)?;
+            write(file, mcnf.to_vec())?;
+            println!("Added empty {key}. Previous value: {}", old.unwrap_or("n/a".to_string()));
         }
         else if let Some(value) = arg_matches.get_one::<String>("value") {
-            println!("Value: {value}");
-            todo!("Setting a value is not yet implemented.")
+            let old = mcnf.try_insert(key.clone(), Some(value.clone()))?;
+            write(file, mcnf.to_vec())?;
+            println!("Added value {value} to  key {key}. Previous value: {}", old.unwrap_or("n/a".to_string()));
         } else {
             if let Some(value) = mcnf.get(key) {
                 let value = value.clone().unwrap_or("<empty>".to_string());

@@ -130,6 +130,7 @@ impl MConfig {
     /// Insert a key-value pair. The value is optional.
     /// This will fail if the key, the value is too long or if the addition would make the overall length
     /// exceed MCONFIG_SIZE.
+    /// Returns old value if Ok and key was present.
     pub fn try_insert(&mut self, key: String, value: Option<String>) -> MCResult<Option<String>> {
         if key.len() > MConfig::MAX_KEY_LEN {
             return Err(MCError::KeyTooBig);
