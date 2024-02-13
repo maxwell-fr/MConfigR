@@ -1,9 +1,9 @@
-use clap::{arg, Arg, ArgAction, ArgMatches};
+use clap::{Arg, ArgAction};
 use mconfig::MConfig;
 use std::error::Error;
-use std::fs::{write, read, File};
+use std::fs::{write, read};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let arg_matches = clap::command!()

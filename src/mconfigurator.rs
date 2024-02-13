@@ -36,6 +36,7 @@ mod mconfig_builder;
 use crate::mconfigurator::mconfig_builder::MConfigBuilder;
 use rand;
 use std::collections::hash_map::Iter as HashMapIter;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::Index;
 
@@ -260,5 +261,13 @@ impl<'a> Iterator for MConfigIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.mc_iter.next()
+    }
+}
+
+impl TryFrom<std::collections::HashMap<String, Option<String>>> for MConfig {
+    type Error = MCError;
+
+    fn try_from(value: HashMap<String, Option<String>>) -> Result<Self, Self::Error> {
+        todo!()
     }
 }
