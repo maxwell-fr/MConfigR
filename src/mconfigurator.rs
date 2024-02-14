@@ -82,6 +82,7 @@ impl MConfig {
     const MCONFIG_SIZE: usize = 8_192;
     const MAX_KEY_LEN: usize = u8::MAX as usize;
     const MAX_VALUE_LEN: usize = u8::MAX as usize;
+    const LATEST_VERSION: u8 = 0;
 
     /// Get a new Builder
     pub fn builder() -> MConfigBuilder {
@@ -256,6 +257,8 @@ impl MConfigIter<'_> {
     }
 }
 
+/// Convert a plain hashmap to an MConfig
+/// This sets up the object with the latest version and no secret.
 impl<'a> Iterator for MConfigIter<'a> {
     type Item = (&'a String, &'a Option<String>);
 
@@ -268,6 +271,33 @@ impl TryFrom<std::collections::HashMap<String, Option<String>>> for MConfig {
     type Error = MCError;
 
     fn try_from(value: HashMap<String, Option<String>>) -> Result<Self, Self::Error> {
-        todo!()
+        let mut total_len: usize = 0;
+
+        // validate lengths; UTF-8 constraint already ensure by String
+        for (key, value) in &value {
+            if key.len() > MConfig::MAX_KEY_LEN {
+                return Err(MCError::KeyTooBig);
+            }
+            total_len += key.len() + 1;
+
+            if let Some(v) = value {
+                if v.len() > MConfig::MAX_VALUE_LEN {
+                    return Err(MCError::ValueTooBig);
+                }
+                else {
+                    total_len += v.len();
+                }
+            }
+            total_len += 1;
+            if total_len > MConfig::MCONFIG_SIZE - MConfig::HEADER_SIZE {
+                return Err(MCError::TooBig);
+            }
+        }
+
+        Ok(MConfig {
+            version: MConfig::LATEST_VERSION,
+            entries: value,
+            secret: None,
+        })
     }
 }
