@@ -257,8 +257,6 @@ impl MConfigIter<'_> {
     }
 }
 
-/// Convert a plain hashmap to an MConfig
-/// This sets up the object with the latest version and no secret.
 impl<'a> Iterator for MConfigIter<'a> {
     type Item = (&'a String, &'a Option<String>);
 
@@ -267,13 +265,15 @@ impl<'a> Iterator for MConfigIter<'a> {
     }
 }
 
+/// Convert a plain hashmap to an MConfig
+/// This sets up the object with the latest version and no secret.
 impl TryFrom<std::collections::HashMap<String, Option<String>>> for MConfig {
     type Error = MCError;
 
     fn try_from(value: HashMap<String, Option<String>>) -> Result<Self, Self::Error> {
         let mut total_len: usize = 0;
 
-        // validate lengths; UTF-8 constraint already ensure by String
+        // validate lengths; UTF-8 constraint already ensured by String
         for (key, value) in &value {
             if key.len() > MConfig::MAX_KEY_LEN {
                 return Err(MCError::KeyTooBig);
